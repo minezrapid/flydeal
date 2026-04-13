@@ -267,6 +267,8 @@ export default function Home() {
   const [to, setTo] = useState('anywhere')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [anyYearFrom, setAnyYearFrom] = useState(false)
+  const [anyYearTo, setAnyYearTo] = useState(false)
   const [maxPrice, setMaxPrice] = useState('')
   const [loading, setLoading] = useState(false)
   const [flights, setFlights] = useState([])
@@ -284,6 +286,12 @@ export default function Home() {
   }, [])
 
   const today = new Date().toISOString().split('T')[0]
+  const yearEnd = `${new Date().getFullYear()}-12-31`
+
+  // Effective dates sent to API
+  const effectiveDateFrom = anyYearFrom ? today : (dateFrom || today)
+  const effectiveDateTo_dep = anyYearFrom ? yearEnd : (dateFrom || today)
+  const effectiveDateTo = anyYearTo ? yearEnd : (dateTo || '')
 
   async function handleSearch() {
     setLoading(true)
@@ -294,7 +302,16 @@ export default function Home() {
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, dateFrom: dateFrom || today, dateTo: dateTo || today, maxPrice: maxPrice || undefined, mode: to === 'anywhere' ? 'everywhere' : 'route' }),
+        body: JSON.stringify({
+          from,
+          to,
+          dateFrom: effectiveDateFrom,
+          dateTo: effectiveDateTo_dep,
+          returnFrom: effectiveDateTo || undefined,
+          returnTo: effectiveDateTo || undefined,
+          maxPrice: maxPrice || undefined,
+          mode: to === 'anywhere' ? 'everywhere' : 'route'
+        }),
       })
       const data = await res.json()
       if (data.error || !data.flights?.length) {
@@ -373,35 +390,90 @@ export default function Home() {
 
             {/* Search form */}
             <div className="card fade-up" style={{ padding: '24px', marginBottom: 32 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 12 }}>
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))', gap: 12, marginBottom: 12 }}>
+
+                {/* De la */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <label>De la</label>
-                  <select value={from} onChange={e => setFrom(e.target.value)}>
+                  <select value={from} onChange={e => setFrom(e.target.value)}
+                    style={{ height: 46, padding: '0 12px' }}>
                     {AIRPORTS.filter(a => a.code !== 'anywhere').map(a => (
                       <option key={a.code} value={a.code}>{a.flag} {a.city} ({a.code})</option>
                     ))}
                   </select>
                 </div>
-                <div>
+
+                {/* Către */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <label>Către</label>
-                  <select value={to} onChange={e => setTo(e.target.value)}>
+                  <select value={to} onChange={e => setTo(e.target.value)}
+                    style={{ height: 46, padding: '0 12px' }}>
                     {AIRPORTS.map(a => (
                       <option key={a.code} value={a.code}>{a.flag} {a.city}{a.code !== 'anywhere' ? ` (${a.code})` : ''}</option>
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label>Data plecare</label>
-                  <input type="date" min={today} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+
+                {/* Data plecare */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span>Data plecare</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 400, color: anyYearFrom ? 'var(--c-accent)' : 'var(--c-muted)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}
+                      onClick={() => { setAnyYearFrom(!anyYearFrom); if (!anyYearFrom) setAnyYearTo(true) }}>
+                      <span style={{
+                        width: 14, height: 14, borderRadius: 4, border: `1.5px solid ${anyYearFrom ? 'var(--c-accent)' : 'var(--c-border)'}`,
+                        background: anyYearFrom ? 'var(--c-accent)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                      }}>
+                        {anyYearFrom && <span style={{ color: 'white', fontSize: 9, lineHeight: 1 }}>✓</span>}
+                      </span>
+                      Oricând
+                    </span>
+                  </label>
+                  <input type="date" min={today} value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                    disabled={anyYearFrom}
+                    style={{ height: 46, padding: '0 12px', opacity: anyYearFrom ? 0.4 : 1, cursor: anyYearFrom ? 'not-allowed' : 'auto' }} />
+                  {anyYearFrom && (
+                    <div style={{ fontSize: 11, color: 'var(--c-accent)', marginTop: 4, fontWeight: 500 }}>
+                      Oricând în {new Date().getFullYear()}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label>Data întoarcere</label>
-                  <input type="date" min={dateFrom || today} value={dateTo} onChange={e => setDateTo(e.target.value)} placeholder="Opțional" />
+
+                {/* Data întoarcere */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span>Întoarcere</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 400, color: anyYearTo ? 'var(--c-accent)' : 'var(--c-muted)', cursor: 'pointer', textTransform: 'none', letterSpacing: 0 }}
+                      onClick={() => setAnyYearTo(!anyYearTo)}>
+                      <span style={{
+                        width: 14, height: 14, borderRadius: 4, border: `1.5px solid ${anyYearTo ? 'var(--c-accent)' : 'var(--c-border)'}`,
+                        background: anyYearTo ? 'var(--c-accent)' : 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                      }}>
+                        {anyYearTo && <span style={{ color: 'white', fontSize: 9, lineHeight: 1 }}>✓</span>}
+                      </span>
+                      Oricând
+                    </span>
+                  </label>
+                  <input type="date" min={dateFrom || today} value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                    disabled={anyYearTo}
+                    style={{ height: 46, padding: '0 12px', opacity: anyYearTo ? 0.4 : 1, cursor: anyYearTo ? 'not-allowed' : 'auto' }} />
+                  {anyYearTo && (
+                    <div style={{ fontSize: 11, color: 'var(--c-accent)', marginTop: 4, fontWeight: 500 }}>
+                      Oricând în {new Date().getFullYear()}
+                    </div>
+                  )}
                 </div>
-                <div>
+
+                {/* Preț max */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <label>Preț max (€)</label>
-                  <input type="number" min={5} max={500} placeholder="Orice" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+                  <input type="number" min={5} max={500} placeholder="Orice" value={maxPrice}
+                    onChange={e => setMaxPrice(e.target.value)}
+                    style={{ height: 46, padding: '0 12px' }} />
                 </div>
+
               </div>
               <button className="btn-primary" onClick={handleSearch} disabled={loading} style={{ width: '100%', fontSize: 16 }}>
                 {loading ? '✈ Se caută...' : `✈ Caută zboruri ${fromAirport?.flag || ''} → ${toAirport?.flag || '🌍'}`}
