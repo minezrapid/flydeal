@@ -3,14 +3,5 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "regions": ["fra1"],
-  "env": {
-    "KIWI_API_KEY": "@kiwi_api_key",
-    "SMTP_HOST": "@smtp_host",
-    "SMTP_PORT": "@smtp_port",
-    "SMTP_USER": "@smtp_user",
-    "SMTP_PASS": "@smtp_pass",
-    "TRAVELPAYOUTS_TOKEN": "@travelpayouts_token",
-    "BOOKING_AFFILIATE_ID": "@booking_affiliate_id"
-  }
+  "regions": ["fra1"]
 }
