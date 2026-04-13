@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --c-ink: #0f0e0d;
+  --c-paper: #faf9f7;
+  --c-accent: #e8440a;
+  --c-accent2: #f5b400;
+  --c-muted: #6b6860;
+  --c-border: #e4e2db;
+  --c-card: #ffffff;
+  --c-success: #1a7a4a;
+  --c-success-bg: #e6f4ec;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display { font-family: var(--font-display); }
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* Card styles */
+.card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+}
+
+.btn-primary {
+  background: var(--c-accent);
+  color: white;
+  font-family: var(--font-display);
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.btn-primary:hover { background: #cf3808; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 14px;
+}
+.btn-secondary:hover { border-color: var(--c-ink); background: var(--c-ink); color: white; }
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--c-ink);
+  background: var(--c-paper);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--c-accent);
+  background: white;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+}
+.badge-deal { background: #fff3e0; color: #b85c00; }
+.badge-virtual { background: #ede9fe; color: #5b21b6; }
+.badge-direct { background: var(--c-success-bg); color: var(--c-success); }
+
+/* Price drop animation */
+@keyframes priceDrop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); color: var(--c-accent); }
+  100% { transform: scale(1); }
+}
+.price-drop { animation: priceDrop 0.6s ease; }
+
+/* Tab styles */
+.tab { 
+  padding: 8px 20px; 
+  border-radius: 100px; 
+  font-size: 14px; 
+  font-weight: 500;
+  cursor: pointer; 
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+  color: var(--c-muted);
+  font-family: var(--font-body);
+}
+.tab.active { background: var(--c-ink); color: white; }
+.tab:hover:not(.active) { color: var(--c-ink); }
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--c-border) 25%, #eeece8 50%, var(--c-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Fade in */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.4s ease forwards; }
+.fade-up-1 { animation-delay: 0.05s; opacity: 0; }
+.fade-up-2 { animation-delay: 0.1s; opacity: 0; }
+.fade-up-3 { animation-delay: 0.15s; opacity: 0; }
+
+/* Mobile responsive utilities */
+@media (max-width: 640px) {
+  .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
