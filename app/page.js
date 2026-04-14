@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import AIChat from './components/AIChat'
 
 const AIRPORTS = [
   { code: 'OTP', city: 'București', flag: '🇷🇴' },
@@ -341,6 +342,20 @@ export default function Home() {
     localStorage.setItem('flydeal_alerts', JSON.stringify(newAlerts))
   }
 
+  // Called by AI agent when it extracts flight params from conversation
+  function handleAgentParams(params) {
+    if (params.from) setFrom(params.from)
+    if (params.to) setTo(params.to)
+    if (params.dateFrom) setDateFrom(params.dateFrom)
+    if (params.dateTo) setDateTo(params.dateTo)
+    if (typeof params.anyYearFrom === 'boolean') setAnyYearFrom(params.anyYearFrom)
+    if (typeof params.anyYearTo === 'boolean') setAnyYearTo(params.anyYearTo)
+    if (params.maxPrice) setMaxPrice(String(params.maxPrice))
+    // Switch to search tab and trigger search
+    setTab('search')
+    setTimeout(() => handleSearch(), 300)
+  }
+
   const sortedFlights = [...flights].sort((a, b) => {
     if (sortBy === 'price') return a.price - b.price
     if (sortBy === 'date') return new Date(a.departure) - new Date(b.departure)
@@ -661,6 +676,9 @@ export default function Home() {
       {alertFlight && (
         <AlertModal flight={alertFlight} onClose={() => setAlertFlight(null)} onSave={saveAlert} />
       )}
+
+      {/* AI Chat Agent */}
+      <AIChat onParamsReady={handleAgentParams} />
     </div>
   )
 }
