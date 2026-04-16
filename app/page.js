@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import AIChat from './components/AIChat'
+import HotDeals from './components/HotDeals'
 
 const AIRPORTS = [
   { code: 'OTP', city: 'București', flag: '🇷🇴' },
@@ -80,25 +81,36 @@ function FlightCard({ flight, onSaveAlert }) {
   const toCode = flight.to?.code || ''
   const dateStr = dep.toISOString().split('T')[0]
 
+  const isWizz = flight.airlines?.includes('W6') || flight.airlineName?.toLowerCase().includes('wizz')
+  const isRyanair = flight.airlines?.includes('FR') || flight.airlineName?.toLowerCase().includes('ryanair')
+
+  const directLink = isWizz
+    ? wizzLink(fromCode, toCode, dateStr)
+    : isRyanair
+      ? ryanairLink(fromCode, toCode, dateStr)
+      : `https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI2LTAxLTAxagcIARIDB1RQcgcIARIDYW55`
+
+  const airlineLabel = isWizz ? 'Wizz Air' : isRyanair ? 'Ryanair' : (flight.airlineName || 'Caută zbor')
+  const airlineColor = isWizz ? '#c4007f' : isRyanair ? '#073590' : 'var(--c-ink)'
+
   return (
-    <div className="card fade-up" style={{ padding: '20px', transition: 'box-shadow 0.2s', cursor: 'default' }}
+    <div className="card fade-up" style={{ padding: '20px', transition: 'box-shadow 0.2s' }}
       onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.08)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
 
-      {/* Header row */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--c-accent)' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: flight.price < 15 ? 'var(--c-accent)' : 'var(--c-ink)' }}>
               €{flight.price}
             </span>
-            {flight.price < 30 && <span className="badge badge-deal">🔥 Super deal</span>}
-            {flight.isVirtual && <span className="badge badge-virtual">Virtual</span>}
-            {flight.stops === 0 && <span className="badge badge-direct">Direct</span>}
+            {flight.price < 15 && <span className="badge badge-deal">ofertă excepțională</span>}
+            {flight.isVirtual && <span className="badge badge-virtual">virtual</span>}
+            {flight.stops === 0 && <span className="badge badge-direct">direct</span>}
           </div>
           <div style={{ fontSize: 12, color: 'var(--c-muted)' }}>
-            {flight.isMock ? 'Date demo' : flight.airlines?.join(', ')}
-            {flight.airlineName ? ` · ${flight.airlineName}` : ''}
+            {flight.isMock ? 'Date demo' : (flight.airlineName || flight.airlines?.join(', '))}
           </div>
         </div>
         <button onClick={() => onSaveAlert(flight)}
@@ -110,47 +122,40 @@ function FlightCard({ flight, onSaveAlert }) {
       </div>
 
       {/* Route */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>{flight.from?.code}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>{fromCode}</div>
           <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{dep.toLocaleTimeString('ro', { hour: '2-digit', minute: '2-digit' })}</div>
         </div>
-        <div style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
           <div style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 4 }}>{dur} · {flight.stops === 0 ? 'direct' : `${flight.stops} escală`}</div>
           <div style={{ height: 1, background: 'var(--c-border)', position: 'relative' }}>
             <span style={{ position: 'absolute', right: 0, top: -5, fontSize: 10 }}>✈</span>
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>{flight.to?.code}</div>
-          <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>
-            {new Date(flight.arrival).toLocaleTimeString('ro', { hour: '2-digit', minute: '2-digit' })}
-          </div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>{toCode}</div>
+          <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>{new Date(flight.arrival).toLocaleTimeString('ro', { hour: '2-digit', minute: '2-digit' })}</div>
         </div>
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--c-muted)', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, color: 'var(--c-muted)', marginBottom: 14 }}>
         {dep.toLocaleDateString('ro', { weekday: 'short', day: 'numeric', month: 'short' })} · {flight.from?.city} → {toCity}
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <a href={kiwiLink(fromCode, toCode, dateStr)} target="_blank" rel="noopener"
-          style={{ display: 'block', textAlign: 'center', background: '#ff6c2f', color: 'white', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-display)' }}>
-          Kiwi.com ↗
-        </a>
-        <a href={flight.airlines?.includes('W6') || flight.airlineName?.includes('Wizz')
-          ? wizzLink(fromCode, toCode, dateStr)
-          : ryanairLink(fromCode, toCode, dateStr)}
-          target="_blank" rel="noopener"
-          style={{ display: 'block', textAlign: 'center', background: 'var(--c-ink)', color: 'white', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-display)' }}>
-          {flight.airlines?.includes('W6') || flight.airlineName?.includes('Wizz') ? 'Wizz Air ↗' : 'Ryanair ↗'}
-        </a>
-      </div>
+      {/* Direct airline button — no affiliate */}
+      <a href={directLink} target="_blank" rel="noopener noreferrer"
+        style={{ display: 'block', textAlign: 'center', background: airlineColor, color: 'white', padding: '11px', borderRadius: 11, fontSize: 13, fontWeight: 700, textDecoration: 'none', fontFamily: 'var(--font-display)', marginBottom: 7, transition: 'opacity 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+        Rezervă pe {airlineLabel} ↗
+      </a>
 
-      {/* Booking link */}
-      <a href={bookingLink(toCity, dateStr, '')} target="_blank" rel="noopener"
-        style={{ display: 'block', marginTop: 8, textAlign: 'center', background: '#003580', color: 'white', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-display)' }}>
+      {/* Booking cazare — affiliate OK */}
+      <a href={bookingLink(toCity, dateStr, '')} target="_blank" rel="noopener noreferrer"
+        style={{ display: 'block', textAlign: 'center', background: 'transparent', color: '#003580', padding: '9px', borderRadius: 11, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-display)', border: '1px solid #ccd9f0', transition: 'background 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.background = '#f0f4fc'}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
         🏨 Cazare în {toCity} — Booking.com ↗
       </a>
     </div>
@@ -402,6 +407,9 @@ export default function Home() {
                 Monitorizăm prețurile pentru tine. Când scad, te anunțăm.
               </p>
             </div>
+
+            {/* Oferte de neratat — auto-loaded, no search needed */}
+            <HotDeals />
 
             {/* Search form */}
             <div className="card fade-up" style={{ padding: '24px', marginBottom: 32 }}>
